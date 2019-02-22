@@ -147,10 +147,13 @@ header h1 {
   font-size: 1.5em;
   width: 45%;
 }
+.actions button,
 .action-item a {
   color: #555;
   display: block;
   cursor: pointer;
+  border: none;
+  outline: none;
 }
 .border {
   width: 2px;
@@ -158,3 +161,21 @@ header h1 {
   background-color: #ececec;
 }
 /* END ACTIONS */
+
+.action-text {
+  font-size: 1em;
+  text-align: center;
+  margin: auto;
+  padding: 0 !important;
+  outline: none;
+  border: none !important;
+  border-radius: 0px !important;
+  background-color: transparent !important;
+  box-shadow: none;
+}
+iframe {
+  max-width: 95%;
+  height: 60vh;
+  margin: auto;
+  border-radius: 10px;
+}
