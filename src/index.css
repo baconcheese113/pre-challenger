@@ -78,19 +78,50 @@ header h1 {
 }
 .percent::after {
   content: "2.2%";
-  animation: numberBounce 3s 5s infinite;
+  animation: numberBounce 12s infinite;
 }
 @keyframes numberBounce {
   0% {
     content: "2.3%";
   }
-  100% {
+  20% {
     content: "2.4%";
+  }
+  100% {
+    content: "2.3%";
   }
 }
 .main-graphic i {
-  height: 40vh;
   font-size: 18em;
+}
+svg {
+  height: 30vh;
+  cursor: pointer;
+}
+svg polyline {
+  fill: none;
+  stroke: black;
+  stroke-width: 2px;
+  stroke-dasharray: 143px 143px;
+  stroke-dashoffset: 143px;
+  stroke-linecap: round;
+  cursor: pointer;
+  animation-name: drawLine;
+  animation-duration: 12s;
+  animation-iteration-count: infinite;
+  animation-direction: normal;
+}
+@keyframes drawLine {
+  0% {
+    stroke-dashoffset: 143px;
+  }
+  20% {
+    stroke-dashoffset: 0px;
+    stroke: #21ce99;
+  }
+  100% {
+    stroke-dashoffset: 0px;
+  }
 }
 .graphic-label {
   margin-right: 10px;

@@ -1,8 +1,10 @@
+
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import PlaidLink from "react-plaid-link";
 import axios from "axios";
+require('dotenv').config();
 // const React = require('react');
 // const ReactDOM = require('react-dom');
 // const express = require('express');
@@ -49,7 +51,9 @@ class App extends React.Component {
             </div>
             <div className="main-graph flex-c flex-center">
               <div className="main-graphic">
-                <i className="fas fa-chart-line" />
+                <svg viewBox="0 0 100 100">
+                  <polyline points="2,90 20,85 40,60 60,70 80,50 95,45"></polyline>
+                </svg>
               </div>
               <div className="graphic-totals flex-r">
                 <h5 className="graphic-label">1 Month</h5>
