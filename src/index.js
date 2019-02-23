@@ -5,26 +5,35 @@ import "./index.css";
 import PlaidLink from "react-plaid-link";
 import axios from "axios";
 require('dotenv').config();
+process.env.OAN = 'lao';
+console.log(process.env);
 // const React = require('react');
 // const ReactDOM = require('react-dom');
 // const express = require('express');
 // import './plaid';
 const PLAID_ENDPOINT = 'https://sandbox.plaid.com';
-
+(async () => {
+  const res = await axios.post('https://sandbox.plaid.com/item/public_token/exchange', {
+    secret: "1dfdad6b1c668616514b2178ab8957",
+    client_id: "5c6f41010b2dcc0011d1f6e3",
+    public_token: "public-sandbox-73061718-6f76-4f1d-99d8-6e876d252808",
+  });
+  console.log(res);
+})();
 class App extends React.Component {
   handleOnExit = () => {console.log('exited')};
   
   handleOnSuccess = async (token, metadata) => {
     console.log(token, metadata);
-    const res = await axios.post(PLAID_ENDPOINT + '/item/public_token/exchange', {
-      secret: process.env.PLAID_SECRET,
-      client_id: process.env.PLAID_CLIENT_ID,
+    const res = await axios.post('https://sandbox.plaid.com/item/public_token/exchange', {
+      secret: "1dfdad6b1c668616514b2178ab8957",
+      client_id: "5c6f41010b2dcc0011d1f6e3",
       public_token: token,
     });
     console.log(res);
     const identity = await axios.post(PLAID_ENDPOINT + '/identity/get', {
-      secret: process.env.PLAID_SECRET,
-      client_id: process.env.PLAID_CLIENT_ID,
+      secret: "1dfdad6b1c668616514b2178ab8957",
+      client_id: "5c6f41010b2dcc0011d1f6e3",
       access_token: res.access_token,
     });
     console.log(identity);
@@ -87,7 +96,7 @@ class App extends React.Component {
             <PlaidLink
               id="plaid-link"
               className="action-text"
-              clientName="Your app name"
+              clientName="Challenger"
               env="sandbox"
               product={["auth", "transactions"]}
               publicKey="bb1eb2ac877fd9bedcfc8963d450b8"
