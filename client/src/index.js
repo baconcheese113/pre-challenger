@@ -17,9 +17,12 @@ class App extends React.Component {
     });
     
     this.state = {
-      name: 'Nate',
+      name: '',
       signedIn: false,
       balance: 0,
+      transactions: [],
+      viewMode: 'month',
+      lineLen: '153px',
     }
   }
   connectToServer = () => {
@@ -39,21 +42,74 @@ class App extends React.Component {
   
   getBalances = (accounts) => {
     console.log(accounts);
-    let sum = 0;
-    for(let account of accounts) {
-      console.log(account);
-      if(account.balances.available) {
-        sum += account.balances.available;
+    return accounts.reduce((acc, account) => {
+      let avail = account.balances.available;
+      return acc + (avail ? avail : 0);
+    }, 0);
+  }
+  getBalanceAt = (date) => {
+    let bal = this.state.balance;
+    for(let trans of this.state.transactions) {
+      if(new Date(date).getTime() < new Date(trans.date).getTime()) {
+        bal = trans.balance;
+      } else {
+        break;
       }
     }
-    return sum;
+    return bal;
+  }
+  getPoints = () => {
+    if (this.state.transactions.length < 1) {
+      return "2,90 20,85 40,60 60,70 80,50 95,45";
+    }
+    let max = this.state.balance;
+    let min = this.state.balance;
+    let startDate = new Date();
+    if(this.state.viewMode === 'year') {
+      startDate = startDate.setMonth(startDate.getMonth() - 12);
+    } else if (this.state.viewMode === 'month') {
+      startDate = startDate.setDate(startDate.getDate() - 30);
+    }
+    for(let trans of this.state.transactions) {
+      if(new Date(trans.date).getTime() > new Date(startDate).getTime())
+      max = Math.max(trans.balance + 1000, max);
+      min = Math.min(min, Math.max(trans.balance - 1000, 0));
+    }
+    // console.log(`Min is ${min} and max is ${max}`);
+    const range = max - min;
+    let points = '';
+    const timeIter = this.state.viewMode === 'year' ? 11 : 30;
+    for(let time = timeIter; time >= 0; time--) {
+      let d = new Date();
+      if(this.state.viewMode === 'year') {
+        d = new Date(d.setMonth(d.getMonth() - time));
+      } else if (this.state.viewMode === 'month') {
+        d = new Date(d.setDate(d.getDate() - time));
+      }
+      let bal = this.getBalanceAt(d);
+      // console.log(`Balance was ${bal}, ${month} months ago`);
+      const yVal = 100 - (((bal - min) / range) * 100);
+      const xVal = 100 - ((100/timeIter) * time);
+      points += (` ${xVal},${yVal}`);
+    }
+    return points;
+  }
+
+  switchViewMode = (viewMode) => {
+    this.setState({
+      viewMode: viewMode,
+      lineLen: document.querySelector('.graph-line').getTotalLength() + 'px',
+    });
+    document.documentElement.style.setProperty('--line-len', document.querySelector('.graph-line').getTotalLength() + 'px');
   }
   handleOnSuccess = async (token, metadata) => {
+    // handoff of public token for access token
     console.log(token, metadata);
     const handoff_req = await axios.post('/api/public_handoff', {
       public_token: token,
     });
     console.log(handoff_req);
+    // request for Identity
     const identity_req = await axios.post('/api/identity/get');
     console.log(identity_req);
     this.setState({
@@ -61,16 +117,33 @@ class App extends React.Component {
       balance: this.getBalances(identity_req.data.accounts),
       signedIn: true,
     });
+    // request for transactions
+    const trans_req = await axios.post('/api/transactions/get');
+    console.log(trans_req);
+    let curBalance = this.state.balance;
+    const newTrans = trans_req.data.transactions.map(trans => {
+      return {
+        id: trans.transaction_id,
+        amount: trans.amount,
+        date: new Date(trans.date),
+        balance: curBalance += trans.amount,
+      };
+    });
+    console.log(newTrans);
+    this.setState({
+      transactions: newTrans,
+    });
   };
   
   render() {
     return (
       <div>
+        <style>{`:root {--line-len: ${this.state.lineLen}}`}</style>
         <header className="flex-c">
           <div className="action-div">
             <i className="fas fa-bars" />
           </div>
-          <h1>Welcome, {this.state.name}</h1>
+          <h1>{this.state.name ? `Welcome ${this.state.name}` : 'Tap Invest to begin...'}</h1>
         </header>
         <main>
           <section className="main-display flex-c">
@@ -84,13 +157,13 @@ class App extends React.Component {
             <div className="main-graph flex-c flex-center">
               <div className="main-graphic">
                 <svg viewBox="0 0 100 100">
-                  <polyline points="2,90 20,85 40,60 60,70 80,50 95,45"></polyline>
+                  <polyline className="graph-line" points={this.getPoints()}></polyline>
                 </svg>
               </div>
               <div className="graphic-totals flex-r">
-                <h5 className="graphic-label">1 Month</h5>
-                <h5 className="graphic-label label-active">1 Year</h5>
-                <h5 className="graphic-label">All Time</h5>
+                <button className={`graphic-label ${this.state.viewMode==='month' ? 'label-active' : ''}`} onClick={() => this.switchViewMode('month')}>1 Month</button>
+                <button className={`graphic-label ${this.state.viewMode==='year' ? 'label-active' : ''}`} onClick={() => this.switchViewMode('year')}>1 Year</button>
+                <button className={`graphic-label ${this.state.viewMode==='all' ? 'label-active' : ''}`} onClick={() => this.switchViewMode('all')}>All Time</button>
               </div>
             </div>
           </section>

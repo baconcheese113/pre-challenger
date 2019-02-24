@@ -50,6 +50,24 @@ app.post('/api/identity/get', async (req, res) => {
   console.log(identity_req);
   res.send(identity_req.data);
 })
+
+app.post('/api/transactions/get', async (req, res) => {
+  if(!access_token) {
+    res.status(500).send('Page unknown');
+    return;
+  }
+  const transactions_req = await axios.post(PLAID_ENDPOINT + '/transactions/get', {
+    client_id: process.env.PLAID_CLIENT_ID,
+    secret: process.env.PLAID_SECRET,
+    access_token: access_token,
+    "start_date": "1970-01-01",
+    "end_date": "2019-02-28",
+  });
+  console.log(transactions_req);
+  res.send(transactions_req.data);
+})
+
+
 // Route setup
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname + '/client/public/index.html'));
