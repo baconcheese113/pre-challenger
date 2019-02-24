@@ -4,55 +4,78 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import PlaidLink from "react-plaid-link";
 import axios from "axios";
-require('dotenv').config();
-process.env.OAN = 'lao';
-console.log(process.env);
-// const React = require('react');
-// const ReactDOM = require('react-dom');
-// const express = require('express');
-// import './plaid';
-const PLAID_ENDPOINT = 'https://sandbox.plaid.com';
-(async () => {
-  const res = await axios.post('https://sandbox.plaid.com/item/public_token/exchange', {
-    secret: "1dfdad6b1c668616514b2178ab8957",
-    client_id: "5c6f41010b2dcc0011d1f6e3",
-    public_token: "public-sandbox-73061718-6f76-4f1d-99d8-6e876d252808",
-  });
-  console.log(res);
-})();
+
+
+
 class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.formatter = Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2
+    });
+    
+    this.state = {
+      name: 'Nate',
+      signedIn: false,
+      balance: 0,
+    }
+  }
+  connectToServer = () => {
+    fetch('/');
+  }
+
+  componentDidMount = () => {
+    this.connectToServer();
+
+    // Change number
+    setInterval(() => {
+      this.setState({balance: this.state.balance + Math.random() });
+    }, 1000);
+  }
+
   handleOnExit = () => {console.log('exited')};
   
+  getBalances = (accounts) => {
+    console.log(accounts);
+    let sum = 0;
+    for(let account of accounts) {
+      console.log(account);
+      if(account.balances.available) {
+        sum += account.balances.available;
+      }
+    }
+    return sum;
+  }
   handleOnSuccess = async (token, metadata) => {
     console.log(token, metadata);
-    const res = await axios.post('https://sandbox.plaid.com/item/public_token/exchange', {
-      secret: "1dfdad6b1c668616514b2178ab8957",
-      client_id: "5c6f41010b2dcc0011d1f6e3",
+    const handoff_req = await axios.post('/api/public_handoff', {
       public_token: token,
     });
-    console.log(res);
-    const identity = await axios.post(PLAID_ENDPOINT + '/identity/get', {
-      secret: "1dfdad6b1c668616514b2178ab8957",
-      client_id: "5c6f41010b2dcc0011d1f6e3",
-      access_token: res.access_token,
+    console.log(handoff_req);
+    const identity_req = await axios.post('/api/identity/get');
+    console.log(identity_req);
+    this.setState({
+      name: identity_req.data.identity.names[0],
+      balance: this.getBalances(identity_req.data.accounts),
+      signedIn: true,
     });
-    console.log(identity);
   };
   
   render() {
-    console.log(process.env.PLAID_CLIENT_ID);
     return (
       <div>
         <header className="flex-c">
           <div className="action-div">
             <i className="fas fa-bars" />
           </div>
-          <h1>Welcome, Nate</h1>
+          <h1>Welcome, {this.state.name}</h1>
         </header>
         <main>
           <section className="main-display flex-c">
             <div className="main-totals flex-c flex-center">
-              <h2>$11,275.38</h2>
+              <h2>{this.formatter.format(this.state.balance)}</h2>
               <div className="main-summary flex-r flex-center">
                 <h4 className="percent rh-text"> </h4>
                 <h4 className="increase">+ $5.20 Last Week</h4>
@@ -122,19 +145,5 @@ class App extends React.Component {
   }
 }
 
-let runningSum = 11275;
-const formatter = Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2
-});
-
-// Change number
-setInterval(() => {
-  const total = document.querySelector(".main-totals h2");
-  runningSum += Math.random();
-
-  total.innerText = formatter.format(runningSum);
-}, 1000);
 
 ReactDOM.render(<App />, document.getElementById("root"));
