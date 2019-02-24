@@ -5,10 +5,11 @@
   "main": "server.js",
   "scripts": {
     "client-install": "npm install --prefix client",
-    "start": "node --inspect server.js",
+    "start": "node server.js",
     "server": "nodemon --inspect server.js",
     "client": "npm start --prefix client",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "heroku-postbuild": "npm run client-install && npm run build --prefix client"
   },
   "author": "Joseph Yannessa",
   "license": "ISC",
